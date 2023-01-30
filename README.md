@@ -1,4 +1,4 @@
-# Place matching(Cosplace)
+# SCA-Cosplays
 본 프로젝트는 Cosplace matching을 이용해 로드뷰 사진을 매칭 구현한 프로젝트이다.
 ## Pipeline
 
@@ -10,48 +10,35 @@
 ├── docker                      # docker container 구축을 위해 필요한 설정파일
 ├── docker-compose.yml          # docker-compose 환경 설정 파일
 ├── docs                        # Readme 작성에 필요한 파일
-├── models                      # Superglue 관련 weight 및 모듈
-├── eval.py                     # Superglue SignMatching 성능 평가를 위한 모듈
-├── main.py                     # Superglue SignMatching 추론 모듈
+├── models                      # Cosplace 관련 weight 및 모듈
+├── eval.py                     # Cosplace 성능 평가를 위한 모듈
+├── train.py                    # Cosplace 학습을 위한 모듈
+├── test.py                     # Cosplace 결과 확인을 위한 모듈
 ├── requirements.txt            
 ├── scripts      
-          ├── download.sh              
-│   └── download_weights.sh             # 성능평가 데이터셋 다운로드 스크립트
+│   └── download.sh             # 성능평가 데이터셋 다운로드 스크립트
+│   └── eval.sh                 # 성능평가 및 결과확인 스크립트
+│   └── resize.sh               # 이미지 크기 재조정 스크립트
 └── utils
-    ├── __init__.py
+    └── util.py                 # 모듈 실행을 위한 유틸리티
     └── common.py               # 모듈 실행을 위한 유틸리티
+    └── img_resize.py           # 이미지 크기를 조절하기 위한 유틸리티
+    └── recall.py               # 성능 평가를 위한 유틸리티
 
 ```
 
 ## Performance
 ### Method 별 성능
-|Method| Recall   | Precision | F1-score |
+|Method| Recall@10   | Recall@5 | Recall@1 |
 |------|----------|-----------|----------|
-|SIFT| 0.37     | 0.49      | 0.42     |
-|VIT| 0.78     | **0.79**  | 0.78     |
-|SIFT+VIT| 0.66     | 0.73      | 0.69     |
-|SuperPoint + Superglue| 0.82     | 0.76      | 0.79     |
-|LoFTR| **0.85** | 0.77      | **0.81** |
-### Superglue 파라미터별 성능
-
-| k   | Match threshold | recall   | precision | F1-score |
-|-----|-----------------|----------|-----------|----------|
-| 1   | 0.4             | **0.85** | 0.68      | 0.76     |
-| 1   | 0.5             | 0.82     | 0.73      | 0.77     |
-| 2   | 0.4             | 0.82     | 0.76      | 0.78     |
-| 2   | 0.5             | 0.81     | 0.78      | **0.79** |
-| 3   | 0.4             | 0.78     | 0.78      | 0.78     |
-| 3   | 0.5             | 0.74     | 0.81      | 0.78     |
-| 4   | 0.4             | 0.74     | 0.80      | 0.77     |
-| 4   | 0.5             | 0.70     | 0.83      | 0.76     |
-| 5   | 0.4             | 0.69     | 0.82      | 0.75     |
-| 5   | 0.5             | 0.66     | **0.84**  | 0.74     |
+|Panorama| **1.00**    | 0.99      | 0.96     |
+|cubemap| 0.85     | 0.82  | 0.66     |
 
 ## Installation
 ```shell
 $ cd ${WORKSPACE}
-$ git clone -b superglue --single-branch https:github.com/gyusik19/SCA-SignMatching
-$ cd SCA-SignMatching
+$ git clone https://github.com/HyeongbinMun/SCA-Cosplays.git
+$ cd SCA-Cosplays
 $ vim docker-compose.yml
   # volume 경로, ports 수정
 $ docker-compose up -d --build
@@ -61,44 +48,47 @@ $ pip install -r requirements.txt
 ## Inference
 Data preparation
 
-- 파노라마 이미지와 간판 detector 모듈의 결과인 json 파일을 같은 경로에 위치시킨다.
-- 이미지와 json 파일은 같은 이름을 가지도록 한다.
+- 파노라마 이미지(8000*4000)가 너무 크기 때문에 쿼리 이미지는 resize 필요(2000*1000)
+- script에 있는 sample feature npy 파일은 (2000*1000)에 대한 feature vector임
+- 이미지 사이즈를 맞추지 않으면 잘못된 검색을 할 수 있음
+```shell
+sh script/resize.sh
+```
+- resize.sh parameter 설명
+  - origin_path : resize 대상 data
+  - resize_path : save directory
+  - img_type files : directory(폴더별로 들어가 있는 상태), files(이미지만 있는 상태)
 
-```shell
-data/sample/db_dir/db_img.jpg
-data/sample/db_dir/db_img.json
-data/sample/query_dir/query_img.jpg
-data/sample/query_dir/query_img.json
-```
-```shell
-python main.py \
---db_path 'data/sample/1/19.jpg' \
---query_path 'data/sample/1/21.jpg' \
---match_threshold 0.4 \
---k 2 \
---visualize \
---output_dir 'data/result'
-```
 visualize 결과
-![img.png](docs/images/img.png)
+![image](https://user-images.githubusercontent.com/39808596/215614993-f8268b89-acff-4e3b-973c-74d53cfd4853.png)
 
 ## Evaluation
 ```shell
 # 평가용 데이터 다운로드
-sh scripts/download_weights.sh
-python eval.py \
---db_path 'data/gt/db' \
---query_path 'data/gt/query' \
---match_threshold 0.4 \
---k 2
+sh scripts/download.sh
+sh script/eval.sh
 ```
-다음과 같은 결과를 확인할 수 있다.
+- eval.sh parameter 설명
+  - db_dir : database directory
+  - query_dirr : query directory
+  - gt_dirr : ground truth directory
+  - backbone : model
+  - fc_output_dim : fc dimention
+  - infer_batch_size : inference batch size
+  - num_workers : num worker number
+  - recall_value : recall count
+  - resume_model : pretarin model path
+  - feature_path : npy path
+  - result_path : results path
+  - result_txt_name : result txt name
 
+다음과 같은 결과를 확인할 수 있다.
 ```shell
-num GT :  704
-num TP, num FP 410 68
-recall :  0.582
-precision :  0.858
-F1-score : 0.6937394247038918
-eval time :  14.831 sec
+data load time : 28.79 sec
+query search time : 7.27 sec
+recall@10 : 100.00  # gt가 있는 경우에만 성능 표시
+recall@5 : 100.00
+recall@1 : 92.00
 ```
+- 추가적으로 해당 recall 결과는 result path의 txt로 저장
+- 해당 result에 따른 이미지는 result_path의 recall_img directory에서 확인 가능
