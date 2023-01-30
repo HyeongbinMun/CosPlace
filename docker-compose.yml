@@ -1,0 +1,35 @@
+version: '2.3'
+
+services:
+  main:
+    container_name: CosPlace
+    build:
+      context: ./
+      dockerfile: docker/Dockerfile
+    runtime: nvidia
+    restart: always
+    env_file:
+      - "docker/env.env"
+    volumes:
+      - type: volume
+        source: nfs_shared
+        target: /nfs_shared
+        volume:
+          nocopy: true
+      - "/media/mmlab/hdd:/hdd"
+    expose:
+      - "8000"
+    ports:
+      - "22000:22"
+      - "22050:6006"
+      - "22055:8000"
+    ipc: host
+    stdin_open: true
+    tty: true
+
+volumes:
+  nfs_shared:
+    driver_opts:
+      type: "nfs"
+      o: "addr=mldisk.sogang.ac.kr,nolock,soft,rw"
+      device: ":/volume3/nfs_shared_"
