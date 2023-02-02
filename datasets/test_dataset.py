@@ -108,15 +108,56 @@ class InferDataset(data.Dataset):
 
         #### Read paths and UTM coordinates for all images.
         self.database_paths = sorted(glob(os.path.join(self.dataset_folder, "**", "*.png"), recursive=True))
-        self.database_paths.extend(
-            (glob(os.path.join(self.dataset_folder, "**", "*.jpg"), recursive=True)))
+        self.database_paths.extend((glob(os.path.join(self.dataset_folder, "**", "*.jpg"), recursive=True)))
 
         self.queries_paths = sorted(glob(os.path.join(self.queryset_folder, "**", "*.png"), recursive=True))
-        self.queries_paths.extend(
-            (glob(os.path.join(self.queryset_folder, "**", "*.jpg"), recursive=True)))
+        self.queries_paths.extend((glob(os.path.join(self.queryset_folder, "**", "*.jpg"), recursive=True)))
 
         self.images_paths = [p for p in self.database_paths]
         self.images_paths += [p for p in self.queries_paths]
+
+        self.database_num = len(self.database_paths)
+        self.queries_num = len(self.queries_paths)
+
+    def __getitem__(self, index):
+        image_path = self.images_paths[index]
+        pil_img = open_image(image_path)
+        normalized_img = self.base_transform(pil_img)
+        return normalized_img, index
+
+    def __len__(self):
+        return len(self.images_paths)
+
+    def __repr__(self):
+        return (f"< {self.dataset_folder} - #q: {self.queries_num}; #db: {self.database_num} >")
+
+    def get_datapaths(self):
+        return self.images_paths
+
+class SingleDataset(data.Dataset):
+    def __init__(self, dataset_folder, queryset_image):
+        super().__init__()
+        self.dataset_folder = dataset_folder
+        self.queryset_image = queryset_image
+        if not os.path.exists(self.dataset_folder):
+            raise FileNotFoundError(f"Folder {self.dataset_folder} does not exist")
+
+        self.base_transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ])
+
+        #### Read paths and UTM coordinates for all images.
+        self.database_paths = sorted(glob(os.path.join(self.dataset_folder, "**", "*.png"), recursive=True))
+        self.database_paths.extend((glob(os.path.join(self.dataset_folder, "**", "*.jpg"), recursive=True)))
+
+        filename, extension = self.queryset_image.split('.')
+        if extension == 'jpg' or 'png':
+            self.queries_paths = []
+            self.queries_paths.append(self.queryset_image)
+
+        self.images_paths = [p for p in self.database_paths]
+        self.images_paths += self.queries_paths
 
         self.database_num = len(self.database_paths)
         self.queries_num = len(self.queries_paths)

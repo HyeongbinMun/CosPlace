@@ -9,9 +9,9 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A4B469963BF863CC
 
 RUN apt-get update && apt-get -y install \
     python3 python3-pip python3-dev \
+    libgl1 \
     git ssh vim unzip
 
-RUN apt-get install libgl1-mesa-glx
 RUN ln -sf /usr/share/zoneinfo/Asia/Seoul /etc/localtime
 RUN ln -s /usr/bin/python3 /usr/bin/python
 RUN echo "root:root" | chpasswd

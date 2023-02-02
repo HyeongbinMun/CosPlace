@@ -2,13 +2,13 @@ import os
 import shutil
 
 class Predict:
-    def __init__(self, args):
-        self.args = args
-        self.gt_path = args.gt_dir
-        self.result_path = os.path.join(args.result_path, 'recall_img')
-        self.result_txt = os.path.join(args.result_path, args.result_txt_name)
+    def __init__(self, params):
+        self.params = params
+        self.path = self.params['model']['data']
+        self.result_path = os.path.join(self.path['save'], 'recall_img')
+        self.result_txt = os.path.join(self.path['save'], self.path['save_name'])
 
-        self.createfolder(args.result_path)
+        self.createfolder(self.path['save'])
         self.createfolder(self.result_path)
 
     def createfolder(self, directory):
@@ -72,7 +72,7 @@ class Predict:
         if len(os.listdir(self.result_path)) == 0:
             self.copy_file(cos_result_list, self.result_path)
 
-        gt_list = os.listdir(self.gt_path)
+        gt_list = os.listdir(self.path['gt'])
         gt_value = self.gt_save(gt_list)
 
         panorama_recall = self.recall_back(cos_result_list, gt_value, 11)

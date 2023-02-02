@@ -1,5 +1,6 @@
 import torch
 import random
+import yaml
 import numpy as np
 
 
@@ -85,4 +86,9 @@ def setup_logging(output_folder, exist_ok=False, console="debug",
         logging.info("Experiment finished (with some errors)")
 
     sys.excepthook = my_handler
+
+def load_settings(settings_path):
+    with open(settings_path) as settings_file:
+        settings = yaml.safe_load(settings_file)
+    return settings
 

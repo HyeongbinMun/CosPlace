@@ -7,3 +7,4 @@ torchvision>=0.9.2
 tqdm>=4.62.3
 utm>=0.7.0
 opencv-python
+PyYAML

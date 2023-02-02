@@ -22,7 +22,7 @@ class Images:
     def resize(self, img_path, save_path):
         img_list = os.listdir(img_path)
 
-        for img in tqdm(img_list):
+        for img in tqdm(img_list, ncols=100):
             img_path = os.path.join(self.oring_paph, img)
             ori = cv2.imread(img_path, cv2.IMREAD_COLOR)
             res = cv2.resize(ori, dsize=(2000, 1000), interpolation=cv2.INTER_AREA)

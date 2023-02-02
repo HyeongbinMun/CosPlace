@@ -1,0 +1,17 @@
+model:
+  data:
+    db: /nfs_shared/STR_Data/roadview/cosplace/panorama_resize/1796
+    gt: /workspace/data/sample/test_gt
+    feature: /workspace/models/feature/anyang_2019_panorama.npy
+    save: /workspace/results
+    save_name: result.txt
+  cosplace:
+    model_name: cosplace101-512
+    model_path: /workspace/models/weights/cosplace_resnet101_512.pth
+    backbone: resnet101
+    device: cuda
+    fc_output_dim: 512
+    batch_size: 1
+    num_workers: 2
+    recall_value: 10
+    seed: 0
